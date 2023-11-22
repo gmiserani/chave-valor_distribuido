@@ -1,0 +1,36 @@
+syntax = "proto3"
+import "google/protobuf/empty.proto";
+
+package pares;
+service ServidorPares{
+    rpc Inserir (reqI) returns (insercao) {}
+    rpc Consulta (reqC) returns (consulta){}
+    rpc Ativação (reqA) returns (google.protobuf.Empty){}
+    rpc Terminacao (reqT) returns (termino){}
+}
+
+message reqI{
+    int32 chave = 1;
+    string valor = 2;
+}
+message insercao {
+    int32 retorno = 1;
+}
+
+message reqC {
+    int32 chave = 1;
+}
+message consulta{
+    string valor = 1;
+}
+
+message reqA{
+    string id = 1;
+}
+
+message reqT {}
+
+message termino {
+    int retorno = 1;
+}
+
