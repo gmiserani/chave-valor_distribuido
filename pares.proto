@@ -1,12 +1,26 @@
-syntax = "proto3"
-import "google/protobuf/empty.proto";
+syntax = "proto3";
 
 package pares;
 service ServidorPares{
-    rpc Inserir (reqI) returns (insercao) {}
-    rpc Consulta (reqC) returns (consulta){}
-    rpc Ativação (reqA) returns (google.protobuf.Empty){}
-    rpc Terminacao (reqT) returns (termino){}
+    rpc Inserir (reqI) returns (insercao);
+    rpc Consulta (reqC) returns (consulta);
+    rpc Ativacao (reqA) returns (cont);
+    rpc Terminacao (reqT) returns (termino);
+}
+
+service ServidorCentral{
+    rpc Registro (reqR) returns (cont);
+    rpc Mapa (reqC) returns (mapa);
+    rpc Terminacao (reqT) returns (termino);
+}
+
+message reqR{
+    string id_servico = 1;
+    repeated int32 chaves = 2;
+}
+
+message mapa{
+    string id_servico = 1;
 }
 
 message reqI{
@@ -27,10 +41,11 @@ message consulta{
 message reqA{
     string id = 1;
 }
-
-message reqT {}
-
-message termino {
-    int retorno = 1;
+message cont{
+    int32 cont = 1;
 }
 
+message reqT {}
+message termino {
+    int32 retorno = 1;
+}

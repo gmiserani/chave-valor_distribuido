@@ -1,15 +1,17 @@
 from concurrent import futures
 
 import grpc
-import sys
+import socket
 
+import sys
+import threading
 import pares_pb2
 import pares_pb2_grpc
 
-class Pares(pares_pb2_grpc.ParesServicer):
-    def __init__(self, server):
+class Pares(pares_pb2_grpc.ServidorParesServicer):
+    def __init__(self, stop_event):
         self.pares = {}
-        self.server = server
+        self.stop_event = stop_event
 
     def Inserir(self, request, context):
         if request.chave in self.pares:
@@ -18,30 +20,43 @@ class Pares(pares_pb2_grpc.ParesServicer):
             self.pares[request.chave] = request.valor
             return pares_pb2.insercao(retorno=0)
     
-    def Consultar(self, request, context):
+    def Consulta(self, request, context):
         if request.chave in self.pares:
             return pares_pb2.consulta(valor=self.pares[request.chave])
         else:
             return pares_pb2.consulta(valor=None)
         
     def Ativacao(self, request, context):
-        
-        if request.ativacao == True:
-            self.server.stop(0)
-            return pares_pb2.AtivacaoReply(mensaje="Servidor desactivado")
+        if (len(sys.argv)==3):
+            channel = grpc.insecure_channel(request.id)
+            stub = pares_pb2_grpc.ServidorCentralStub(channel)
+            response = stub.Registro(pares_pb2.reqR(id_servico=f"{socket.getfqdn()}:{sys.argv[1]}", chaves=self.pares.keys()))
+            
+            return pares_pb2.ativacao(cont=response.cont)
         else:
-            return pares_pb2.AtivacaoReply(mensaje="Servidor activado")
-    def Terminacao(self, request, context):
-        return pares_pb2.termino(mensaje="Servidor terminado")
+            return pares_pb2.ativacao(cont=0)
+            
 
-def serve():
+    def Terminacao(self, request, context):
+        self.stop_event.set()
+        return pares_pb2.termino(retorno=0)
+
+def serve(port):
+    stop_event = threading.Event()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    pares_pb2_grpc.add_ParesServicer_to_server(Pares(), server)
-    server.add_insecure_port('[::]:' + portnumber)
+    pares_pb2_grpc.add_ServidorParesServicer_to_server(Pares(stop_event), server)
+    server.add_insecure_port('[::]:' + port)
     server.start()
-    server.wait_for_termination()
+    stop_event.wait()
+    server.stop(0)
 
 if __name__ == '__main__':
-    port = sys.argv[1]
-    if len(sys.argv) == 3:
+    if (len(sys.argv) == 2):
+        port = sys.argv[1]
+
+    if (len(sys.argv) == 3):
+        port = sys.argv[1]
+        flag = sys.argv[2]
+
+    serve(port)
         
