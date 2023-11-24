@@ -9,9 +9,10 @@ import pares_pb2
 import pares_pb2_grpc
 
 class Pares(pares_pb2_grpc.ServidorParesServicer):
-    def __init__(self, stop_event):
+    def __init__(self, stop_event, portNumber):
         self.pares = {}
         self.stop_event = stop_event
+        self.portNumber = portNumber
 
     def Inserir(self, request, context):
         if request.chave in self.pares:
@@ -24,17 +25,17 @@ class Pares(pares_pb2_grpc.ServidorParesServicer):
         if request.chave in self.pares:
             return pares_pb2.consulta(valor=self.pares[request.chave])
         else:
-            return pares_pb2.consulta(valor=None)
+            return pares_pb2.consulta(valor="")
         
     def Ativacao(self, request, context):
         if (len(sys.argv)==3):
             channel = grpc.insecure_channel(request.id)
             stub = pares_pb2_grpc.ServidorCentralStub(channel)
-            response = stub.Registro(pares_pb2.reqR(id_servico=f"{socket.getfqdn()}:{sys.argv[1]}", chaves=self.pares.keys()))
+            response = stub.Registro(pares_pb2.reqR(id_servico=f"{socket.getfqdn()}:{self.portNumber}", chaves=self.pares.keys()))
             
-            return pares_pb2.ativacao(cont=response.cont)
+            return pares_pb2.cont(cont=response.cont)
         else:
-            return pares_pb2.ativacao(cont=0)
+            return pares_pb2.cont(cont=0)
             
 
     def Terminacao(self, request, context):
@@ -42,9 +43,10 @@ class Pares(pares_pb2_grpc.ServidorParesServicer):
         return pares_pb2.termino(retorno=0)
 
 def serve(port):
+    
     stop_event = threading.Event()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    pares_pb2_grpc.add_ServidorParesServicer_to_server(Pares(stop_event), server)
+    pares_pb2_grpc.add_ServidorParesServicer_to_server(Pares(stop_event, sys.argv[1]), server)
     server.add_insecure_port('[::]:' + port)
     server.start()
     stop_event.wait()

@@ -11,15 +11,16 @@ class ServidorCentral(pares_pb2_grpc.ServidorCentralServicer):
         self.stop_event = stop_event
 
     def Registro(self, request, context):
+        id = request.id_servico
         for chave in request.chaves:
-            self.chaves[chave] = request.id
-        return pares_pb2.registro(cont=len(request.chaves))
+            self.chaves[chave] = id
+        return pares_pb2.cont(cont=len(request.chaves))
     
     def Mapa(self, request, context):
         for chave in self.chaves:
             if chave == request.chave:
-                return pares_pb2.mapa(id=self.chaves[chave])
-        return pares_pb2.mapa(id=None)
+                return pares_pb2.mapa(id_servico=self.chaves[chave])
+        return pares_pb2.mapa(id_servico="")
 
     def Terminacao(self, request, context):
         self.stop_event.set()

@@ -21,14 +21,16 @@ if __name__ == '__main__':
                 break
             elif procedimento.startswith('C,'):
                 _, chave = procedimento.split(',', 1)
-                id_servico = stub.Mapa(pares_pb2.reqC(chave=int(chave))).id
-                if id_servico == None:
+                channel = grpc.insecure_channel(servidorID)
+                stub = pares_pb2_grpc.ServidorCentralStub(channel)
+                id_servico = stub.Mapa(pares_pb2.reqC(chave=int(chave)))
+                if id_servico.id_servico == "":
                     continue
-                channel = grpc.insecure_channel(id_servico)
+                channel = grpc.insecure_channel(id_servico.id_servico)
                 stub = pares_pb2_grpc.ServidorParesStub(channel)
                 response = stub.Consulta(pares_pb2.reqC(chave=int(chave)))
                 
-                print(f"{id_servico}: {response.valor}", end="")
+                print(f"{id_servico.id_servico}: {response.valor}")
             
     except  EOFError:
         channel.close()
