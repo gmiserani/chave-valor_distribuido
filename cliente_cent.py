@@ -39,7 +39,7 @@ if __name__ == '__main__':
                 stub = pares_pb2_grpc.ServidorParesStub(channel)
                 response = stub.Consulta(pares_pb2.reqC(chave=int(chave)))
                 
-                print(f"{id_servico.id_servico}: {response.valor}")
+                print(f"{id_servico.id_servico}:{response.valor}")
             
     except  EOFError:
         channel.close()

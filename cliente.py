@@ -39,6 +39,7 @@ def run():
 
             elif procedimento.startswith('C,'):
                 _, chave = procedimento.split(',', 1)
+                print(chave)
                 Consultar(stub, int(chave))
 
             elif procedimento.startswith('A,'):
