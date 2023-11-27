@@ -7,7 +7,7 @@ import grpc
 import pares_pb2
 import pares_pb2_grpc
 #faz o pedido de insercao de um valor associado a uma chave no servidor
-def Inserir(stub, chave, valor):
+def Inserir(stub, chave:int, valor:str):
     response = stub.Inserir(pares_pb2.reqI(chave=chave, valor=valor))
     print(response.retorno)
 #faz o pedido de consulta do valor associado a uma determinada chave
@@ -35,19 +35,28 @@ def run():
             procedimento = input().strip()
             if procedimento.startswith('I,'):
                 _, chave, valor = procedimento.split(',', 2)
-                Inserir(stub, int(chave), valor)
+                #faz o pedido de insercao de um valor associado a uma chave no servidor
+                response = stub.Inserir(pares_pb2.reqI(chave=int(chave), valor=valor))
+                print(response.retorno)
 
             elif procedimento.startswith('C,'):
                 _, chave = procedimento.split(',', 1)
                 print(chave)
-                Consultar(stub, int(chave))
+                #faz o pedido de consulta do valor associado a uma determinada chave
+                response = stub.Consulta(pares_pb2.reqC(chave=int(chave)))
+                print(response.valor)
 
             elif procedimento.startswith('A,'):
                 _, id = procedimento.split(',', 1)
-                Ativacao(stub, id)
+                #faz o pedido da ativacao, ou seja, dor armazenamento dos valores do servidor
+                #em um servidor central que é passado como parametro
+                response = stub.Ativacao(pares_pb2.reqA(id=id))
+                print(response.cont)
             
             elif procedimento.startswith('T'):
-                Terminacao(stub)
+                #faz o pedido de terminacao de conexao
+                response = stub.Terminacao(pares_pb2.reqT())
+                print(response.retorno)
                 break
 
     except EOFError:
